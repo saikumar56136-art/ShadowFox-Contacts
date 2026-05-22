@@ -9,13 +9,14 @@ public class ContactAppGUI extends JFrame {
 
     private DefaultTableModel tableModel;
     private JTable table;
-    private JTextField nameField, phoneField, emailField, searchField;
+    private JTextField nameField, phoneField,
+            emailField, searchField;
     private ContactManager manager = new ContactManager();
     private ArrayList<Contact> contactList = new ArrayList<>();
 
     public ContactAppGUI() {
         setTitle("ShadowFox Contact Manager");
-        setSize(600, 500);
+        setSize(650, 550);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         getContentPane().setBackground(Color.decode("#f5f5f5"));
@@ -82,6 +83,7 @@ public class ContactAppGUI extends JFrame {
         JButton updateBtn = new JButton("Update");
         JButton deleteBtn = new JButton("Delete");
         JButton clearBtn = new JButton("Clear");
+        JButton exportBtn = new JButton("📤 Export VCard");
 
         addBtn.setBackground(Color.decode("#4CAF50"));
         addBtn.setForeground(Color.WHITE);
@@ -91,17 +93,21 @@ public class ContactAppGUI extends JFrame {
         deleteBtn.setForeground(Color.WHITE);
         clearBtn.setBackground(Color.decode("#9E9E9E"));
         clearBtn.setForeground(Color.WHITE);
+        exportBtn.setBackground(Color.decode("#009688"));
+        exportBtn.setForeground(Color.WHITE);
 
         addBtn.addActionListener(e -> addContact());
         updateBtn.addActionListener(e -> updateContact());
         deleteBtn.addActionListener(e -> deleteContact());
         clearBtn.addActionListener(e -> clearFields());
+        exportBtn.addActionListener(e -> exportVCard());
 
         JPanel btnPanel = new JPanel();
         btnPanel.add(addBtn);
         btnPanel.add(updateBtn);
         btnPanel.add(deleteBtn);
         btnPanel.add(clearBtn);
+        btnPanel.add(exportBtn);
 
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(formPanel, BorderLayout.CENTER);
@@ -140,7 +146,6 @@ public class ContactAppGUI extends JFrame {
 
         manager.updateContact(phone, newName, newEmail);
 
-        // Update contactList
         for (Contact c : contactList) {
             if (c.getPhone().equals(phone)) {
                 c.setName(newName);
@@ -152,7 +157,7 @@ public class ContactAppGUI extends JFrame {
         tableModel.setValueAt(newName, row, 0);
         tableModel.setValueAt(newEmail, row, 2);
         clearFields();
-        JOptionPane.showMessageDialog(this, "Contact updated!");
+        JOptionPane.showMessageDialog(this, "✅ Contact updated!");
     }
 
     private void deleteContact() {
@@ -171,7 +176,32 @@ public class ContactAppGUI extends JFrame {
             contactList.removeIf(c -> c.getPhone().equals(phone));
             tableModel.removeRow(row);
             clearFields();
-            JOptionPane.showMessageDialog(this, "Contact deleted!");
+            JOptionPane.showMessageDialog(this,
+                    "✅ Contact deleted!");
+        }
+    }
+
+    private void exportVCard() {
+        if (contactList.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "❌ No contacts to export!");
+            return;
+        }
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setSelectedFile(
+                new java.io.File("contacts.vcf"));
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            String filename = fileChooser
+                    .getSelectedFile().getAbsolutePath();
+            boolean exported = manager.exportToVCard(filename);
+            if (exported) {
+                JOptionPane.showMessageDialog(this,
+                        "✅ Contacts exported to:\n" + filename);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "❌ Export failed!");
+            }
         }
     }
 

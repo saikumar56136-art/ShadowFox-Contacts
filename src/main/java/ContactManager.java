@@ -1,17 +1,29 @@
 package org.example;
+
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.regex.Pattern;
 
 public class ContactManager {
     private ArrayList<Contact> contacts = new ArrayList<>();
-    private Set<String> phoneNumbers = new HashSet<>();
+    private HashSet<String> phoneNumbers = new HashSet<>();
+
+    // Phone validation
+    private boolean isValidPhone(String phone) {
+        return Pattern.matches("\\d{10}", phone);
+    }
+
+    // Email validation
+    private boolean isValidEmail(String email) {
+        return Pattern.matches(
+                "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$", email);
+    }
 
     // Add contact
-    public boolean addContact(String name, String phone, String email) {
-        if (phoneNumbers.contains(phone)) {
-            System.out.println("❌ Phone number already exists!");
+    public boolean addContact(String name,
+                              String phone, String email) {
+        if (name.isEmpty() || phone.isEmpty() || email.isEmpty()) {
+            System.out.println("❌ All fields are required!");
             return false;
         }
         if (!isValidPhone(phone)) {
@@ -19,7 +31,11 @@ public class ContactManager {
             return false;
         }
         if (!isValidEmail(email)) {
-            System.out.println("❌ Invalid email address!");
+            System.out.println("❌ Invalid email!");
+            return false;
+        }
+        if (phoneNumbers.contains(phone)) {
+            System.out.println("❌ Phone number already exists!");
             return false;
         }
         contacts.add(new Contact(name, phone, email));
@@ -51,48 +67,69 @@ public class ContactManager {
                 found = true;
             }
         }
-        if (!found) System.out.println("❌ No contact found!");
+        if (!found) {
+            System.out.println("❌ No contacts found!");
+        }
     }
 
     // Update contact
-    public void updateContact(String phone, String newName,
-                              String newEmail) {
+    public boolean updateContact(String phone,
+                                 String newName, String newEmail) {
         for (Contact c : contacts) {
             if (c.getPhone().equals(phone)) {
                 c.setName(newName);
                 c.setEmail(newEmail);
                 System.out.println("✅ Contact updated!");
-                return;
+                return true;
             }
         }
         System.out.println("❌ Contact not found!");
+        return false;
     }
 
     // Delete contact
-    public void deleteContact(String phone) {
-        Contact toRemove = null;
+    public boolean deleteContact(String phone) {
         for (Contact c : contacts) {
             if (c.getPhone().equals(phone)) {
-                toRemove = c;
-                break;
+                contacts.remove(c);
+                phoneNumbers.remove(phone);
+                System.out.println("✅ Contact deleted!");
+                return true;
             }
         }
-        if (toRemove != null) {
-            contacts.remove(toRemove);
-            phoneNumbers.remove(phone);
-            System.out.println("✅ Contact deleted!");
-        } else {
-            System.out.println("❌ Contact not found!");
+        System.out.println("❌ Contact not found!");
+        return false;
+    }
+
+    // Get all contacts
+    public ArrayList<Contact> getContacts() {
+        return contacts;
+    }
+
+    // Export to VCard
+    public boolean exportToVCard(String filename) {
+        if (contacts.isEmpty()) {
+            System.out.println("❌ No contacts to export!");
+            return false;
         }
-    }
-
-    // Validate phone
-    private boolean isValidPhone(String phone) {
-        return phone.matches("\\d{10}");
-    }
-
-    // Validate email
-    private boolean isValidEmail(String email) {
-        return email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+        try {
+            java.io.FileWriter writer =
+                    new java.io.FileWriter(filename);
+            for (Contact c : contacts) {
+                writer.write("BEGIN:VCARD\n");
+                writer.write("VERSION:3.0\n");
+                writer.write("FN:" + c.getName() + "\n");
+                writer.write("TEL:" + c.getPhone() + "\n");
+                writer.write("EMAIL:" + c.getEmail() + "\n");
+                writer.write("END:VCARD\n\n");
+            }
+            writer.close();
+            System.out.println("✅ Exported to " + filename);
+            return true;
+        } catch (Exception e) {
+            System.out.println("❌ Export failed: "
+                    + e.getMessage());
+            return false;
+        }
     }
 }
