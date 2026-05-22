@@ -37,3 +37,12 @@ the Calculator project.
 - Data binding between table and ArrayList
 - refreshTable() method to keep UI in sync with data
 - removeIf() to delete from ArrayList efficiently
+- ## Tier 2 VCard Export Learnings
+
+### What I Learned
+- VCard (.vcf) format structure
+- BEGIN:VCARD and END:VCARD tags
+- FileWriter to write .vcf files
+- JFileChooser for save dialog
+- Standard contact export format
+- Used by phones and email clients
